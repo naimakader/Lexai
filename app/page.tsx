@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -11,6 +13,89 @@ const fadeUp = {
     transition: { delay: i * 0.1, duration: 0.55, ease: [0.22, 1, 0.36, 1] },
   }),
 };
+
+function HeroButton() {
+  const { isSignedIn, isLoaded } = useUser();
+  if (!isLoaded) return null;
+  return (
+    <Link
+      href={isSignedIn ? "/dashboard" : "/sign-up"}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        fontSize: 16,
+        fontWeight: 700,
+        color: "#fff",
+        textDecoration: "none",
+        background: "#6366F1",
+        padding: "16px 40px",
+        borderRadius: 14,
+        boxShadow: "0 0 48px rgba(99,102,241,0.5)",
+        letterSpacing: "-0.01em",
+      }}
+    >
+      {isSignedIn ? "Go to dashboard →" : "Get started free →"}
+    </Link>
+  );
+}
+
+function NavButtons() {
+  const { isSignedIn, isLoaded } = useUser();
+  if (!isLoaded) return null;
+
+  if (isSignedIn) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Link
+          href="/dashboard"
+          style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: "#fff",
+            textDecoration: "none",
+            background: "#6366F1",
+            padding: "8px 18px",
+            borderRadius: 8,
+          }}
+        >
+          Dashboard →
+        </Link>
+        <UserButton afterSignOutUrl="/" />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <Link
+        href="/sign-in"
+        style={{
+          fontSize: 13,
+          color: "#6B7280",
+          textDecoration: "none",
+          padding: "6px 14px",
+        }}
+      >
+        Sign in
+      </Link>
+      <Link
+        href="/sign-up"
+        style={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: "#fff",
+          textDecoration: "none",
+          background: "#6366F1",
+          padding: "8px 18px",
+          borderRadius: 8,
+        }}
+      >
+        Get started →
+      </Link>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
@@ -22,7 +107,7 @@ export default function Home() {
         overflowX: "hidden",
       }}
     >
-      {/* SUBTLE GRID */}
+      {/* GRID */}
       <div
         style={{
           position: "fixed",
@@ -30,12 +115,12 @@ export default function Home() {
           pointerEvents: "none",
           zIndex: 0,
           backgroundImage: `linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)`,
+          linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)`,
           backgroundSize: "64px 64px",
         }}
       />
 
-      {/* TOP GLOW */}
+      {/* GLOW */}
       <div
         style={{
           position: "fixed",
@@ -52,7 +137,7 @@ export default function Home() {
         }}
       />
 
-      {/* ── NAV ── */}
+      {/* NAV */}
       <motion.nav
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
@@ -108,36 +193,10 @@ export default function Home() {
           ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Link
-            href="/sign-in"
-            style={{
-              fontSize: 13,
-              color: "#9CA3AF",
-              textDecoration: "none",
-              padding: "6px 14px",
-            }}
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/sign-up"
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#fff",
-              textDecoration: "none",
-              background: "#6366F1",
-              padding: "8px 18px",
-              borderRadius: 8,
-            }}
-          >
-            Start free →
-          </Link>
-        </div>
+        <NavButtons />
       </motion.nav>
 
-      {/* ── HERO ── */}
+      {/* HERO */}
       <section
         style={{
           position: "relative",
@@ -174,6 +233,7 @@ export default function Home() {
               borderRadius: "50%",
               background: "#818CF8",
               display: "inline-block",
+              animation: "blink 2s infinite",
             }}
           />
           AI-Powered Legal Training Platform
@@ -236,44 +296,10 @@ export default function Home() {
           style={{
             display: "flex",
             justifyContent: "center",
-            gap: 12,
-            flexWrap: "wrap",
             marginBottom: "4rem",
           }}
         >
-          <Link
-            href="/sign-up"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 15,
-              fontWeight: 600,
-              color: "#fff",
-              textDecoration: "none",
-              background: "#6366F1",
-              padding: "14px 32px",
-              borderRadius: 12,
-              boxShadow: "0 0 40px rgba(99,102,241,0.45)",
-            }}
-          >
-            Enter the courtroom →
-          </Link>
-          <Link
-            href="/dashboard"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              fontSize: 15,
-              color: "#9CA3AF",
-              textDecoration: "none",
-              padding: "14px 24px",
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.1)",
-            }}
-          >
-            Browse cases ↗
-          </Link>
+          <HeroButton />
         </motion.div>
 
         {/* APP PREVIEW */}
@@ -293,7 +319,6 @@ export default function Home() {
               "0 0 80px rgba(99,102,241,0.15), 0 60px 100px rgba(0,0,0,0.6)",
           }}
         >
-          {/* Window bar */}
           <div
             style={{
               background: "rgba(255,255,255,0.04)",
@@ -345,7 +370,6 @@ export default function Home() {
           </div>
 
           <div style={{ padding: "1.5rem" }}>
-            {/* Personas */}
             <div
               style={{
                 display: "grid",
@@ -406,7 +430,6 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Messages */}
             <div
               style={{
                 display: "flex",
@@ -475,7 +498,7 @@ export default function Home() {
                   </div>
                   <div
                     style={{
-                      maxWidth: "78%",
+                      maxWidth: "75%",
                       display: "flex",
                       flexDirection: "column",
                       alignItems:
@@ -514,7 +537,6 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Score */}
             <div
               style={{
                 background: "rgba(255,255,255,0.03)",
@@ -581,7 +603,6 @@ export default function Home() {
               </span>
             </div>
 
-            {/* Input */}
             <div
               style={{
                 display: "flex",
@@ -613,7 +634,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ── STATS ── */}
+      {/* STATS */}
       <motion.section
         id="cases"
         initial={{ opacity: 0, y: 30 }}
@@ -684,7 +705,7 @@ export default function Home() {
         ))}
       </motion.section>
 
-      {/* ── FEATURES ── */}
+      {/* FEATURES */}
       <section
         id="features"
         style={{ padding: "5rem 2.5rem", position: "relative", zIndex: 10 }}
@@ -820,7 +841,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── TESTIMONIAL ── */}
+      {/* TESTIMONIAL */}
       <motion.section
         id="about"
         initial={{ opacity: 0, y: 30 }}
@@ -904,7 +925,7 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* ── CTA ── */}
+      {/* FINAL CTA */}
       <motion.section
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -934,27 +955,10 @@ export default function Home() {
         <p style={{ fontSize: 15, color: "#6B7280", marginBottom: "2rem" }}>
           Free forever. No credit card. No download.
         </p>
-        <Link
-          href="/sign-up"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 16,
-            fontWeight: 700,
-            color: "#fff",
-            textDecoration: "none",
-            background: "#6366F1",
-            padding: "16px 36px",
-            borderRadius: 14,
-            boxShadow: "0 0 60px rgba(99,102,241,0.5)",
-          }}
-        >
-          Enter the courtroom →
-        </Link>
+        <HeroButton />
       </motion.section>
 
-      {/* ── FOOTER ── */}
+      {/* FOOTER */}
       <footer
         style={{
           position: "relative",
@@ -1005,6 +1009,13 @@ export default function Home() {
           </Link>
         </div>
       </footer>
+
+      <style>{`
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+      `}</style>
     </main>
   );
 }

@@ -1,9 +1,7 @@
 "use client";
-
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-
 type Message = {
   role: "judge" | "prosecution" | "user";
   content: string;
@@ -15,6 +13,104 @@ type CaseData = {
   description: string;
   facts: string;
 };
+
+function Message({ msg }: { msg: Message }) {
+  const isUser = msg.role === "user";
+
+  const config = {
+    judge: {
+      abbr: "JDG",
+      label: "JUDGE",
+      color: "#FBBF24",
+      bg: "rgba(251,191,36,0.08)",
+      border: "rgba(251,191,36,0.18)",
+      bubbleRadius: "4px 14px 14px 14px",
+    },
+    prosecution: {
+      abbr: "PRO",
+      label: "PROSECUTION",
+      color: "#F87171",
+      bg: "rgba(248,113,113,0.08)",
+      border: "rgba(248,113,113,0.18)",
+      bubbleRadius: "4px 14px 14px 14px",
+    },
+    user: {
+      abbr: "YOU",
+      label: "YOU · DEFENSE",
+      color: "#818CF8",
+      bg: "rgba(99,102,241,0.12)",
+      border: "rgba(99,102,241,0.28)",
+      bubbleRadius: "14px 4px 14px 14px",
+    },
+  };
+
+  const c = config[msg.role];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 12,
+        flexDirection: isUser ? "row-reverse" : "row",
+        alignItems: "flex-start",
+      }}
+    >
+      <div
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: "50%",
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 9,
+          fontFamily: "monospace",
+          fontWeight: 700,
+          color: c.color,
+          background: c.bg,
+          border: `1px solid ${c.border}`,
+        }}
+      >
+        {c.abbr}
+      </div>
+      <div
+        style={{
+          maxWidth: "78%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: isUser ? "flex-end" : "flex-start",
+          gap: 4,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 10,
+            fontFamily: "monospace",
+            color: "#4B5563",
+            letterSpacing: "0.06em",
+            fontWeight: 600,
+          }}
+        >
+          {c.label}
+        </span>
+        <div
+          style={{
+            padding: "12px 16px",
+            borderRadius: c.bubbleRadius,
+            background: c.bg,
+            border: `1px solid ${c.border}`,
+            fontSize: 14,
+            lineHeight: 1.7,
+            color: "#E5E7EB",
+          }}
+        >
+          {msg.content}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CourtroomClient({
   caseData,
@@ -80,7 +176,6 @@ export default function CourtroomClient({
       setScore(data.score);
       setFeedback(data.feedback);
 
-      // Save session to Supabase
       await supabase.from("sessions").upsert({
         user_id: userId,
         case_title: caseData.title,
@@ -95,111 +190,272 @@ export default function CourtroomClient({
   }
 
   const scoreColor =
-    score >= 70 ? "bg-green-500" : score >= 40 ? "bg-yellow-500" : "bg-red-500";
+    score >= 70 ? "#4ADE80" : score >= 40 ? "#FBBF24" : "#F87171";
+  const scoreBg =
+    score >= 70
+      ? "rgba(74,222,128,0.15)"
+      : score >= 40
+        ? "rgba(251,191,36,0.15)"
+        : "rgba(248,113,113,0.15)";
 
   return (
-    <main className="min-h-screen bg-[#0a0a0b] flex flex-col">
-      {/* Top bar */}
-      <div className="border-b border-white/10 bg-[#111114] px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#03030A",
+        color: "#F0EEE8",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* Glow */}
+      <div
+        style={{
+          position: "fixed",
+          top: -300,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: 600,
+          height: 600,
+          borderRadius: "50%",
+          pointerEvents: "none",
+          zIndex: 0,
+          background:
+            "radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%)",
+        }}
+      />
+
+      {/* Grid */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 0,
+          backgroundImage: `linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)`,
+          backgroundSize: "64px 64px",
+        }}
+      />
+
+      {/* ── TOP BAR ── */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 20,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "1rem 2rem",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(3,3,10,0.8)",
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <Link
             href="/dashboard"
-            className="text-gray-500 hover:text-white text-sm transition-colors"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              color: "#6B7280",
+              textDecoration: "none",
+            }}
           >
             ← Back
           </Link>
+          <div
+            style={{
+              width: 1,
+              height: 20,
+              background: "rgba(255,255,255,0.08)",
+            }}
+          />
           <div>
-            <h1 className="text-white font-semibold text-sm">
+            <h1
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: "#F0EEE8",
+                margin: 0,
+                letterSpacing: "-0.01em",
+              }}
+            >
               {caseData.title}
             </h1>
-            <p className="text-gray-500 text-xs">{caseData.description}</p>
+            <p style={{ fontSize: 12, color: "#6B7280", margin: 0 }}>
+              {caseData.description}
+            </p>
           </div>
         </div>
-        <span className="text-xs font-mono text-yellow-500/80 bg-yellow-500/10 border border-yellow-500/20 px-2 py-1 rounded-full">
+        <span
+          style={{
+            fontSize: 11,
+            fontFamily: "monospace",
+            fontWeight: 600,
+            color: "#FBBF24",
+            background: "rgba(251,191,36,0.1)",
+            border: "1px solid rgba(251,191,36,0.2)",
+            padding: "3px 10px",
+            borderRadius: 100,
+          }}
+        >
           {caseData.type}
         </span>
       </div>
 
-      {/* Personas */}
-      <div className="grid grid-cols-3 border-b border-white/10">
+      {/* ── PERSONAS ── */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 10,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(255,255,255,0.015)",
+        }}
+      >
         {[
-          { label: "Judge", role: "JDG", color: "text-yellow-400" },
-          { label: "Prosecution", role: "PRO", color: "text-red-400" },
-          { label: "You · Defense", role: "YOU", color: "text-blue-400" },
-        ].map((p) => (
+          {
+            label: "Judge",
+            abbr: "JDG",
+            color: "#FBBF24",
+            bg: "rgba(251,191,36,0.1)",
+            border: "rgba(251,191,36,0.2)",
+            desc: "AI · Presiding",
+          },
+          {
+            label: "Prosecution",
+            abbr: "PRO",
+            color: "#F87171",
+            bg: "rgba(248,113,113,0.1)",
+            border: "rgba(248,113,113,0.2)",
+            desc: "AI · Opposing",
+          },
+          {
+            label: "You · Defense",
+            abbr: "YOU",
+            color: "#818CF8",
+            bg: "rgba(99,102,241,0.12)",
+            border: "rgba(99,102,241,0.25)",
+            desc: "Your role",
+          },
+        ].map((p, i) => (
           <div
             key={p.label}
-            className="flex flex-col items-center py-3 bg-[#111114]"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              padding: "14px 12px",
+              borderRight: i < 2 ? "1px solid rgba(255,255,255,0.07)" : "none",
+            }}
           >
-            <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-xs font-mono mb-1">
-              <span className={p.color}>{p.role}</span>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 10,
+                fontFamily: "monospace",
+                fontWeight: 700,
+                color: p.color,
+                background: p.bg,
+                border: `1px solid ${p.border}`,
+              }}
+            >
+              {p.abbr}
             </div>
-            <span className="text-xs text-gray-400">{p.label}</span>
+            <div>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#F0EEE8",
+                }}
+              >
+                {p.label}
+              </span>
+              <span style={{ fontSize: 11, color: "#4B5563" }}>{p.desc}</span>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-4 max-w-3xl w-full mx-auto">
+      {/* ── MESSAGES ── */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          position: "relative",
+          zIndex: 10,
+          padding: "2rem 1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: 20,
+          maxWidth: 780,
+          width: "100%",
+          margin: "0 auto",
+        }}
+      >
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
-          >
-            <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono flex-shrink-0 border border-white/10
-                ${msg.role === "judge" ? "bg-yellow-500/10 text-yellow-400" : ""}
-                ${msg.role === "prosecution" ? "bg-red-500/10 text-red-400" : ""}
-                ${msg.role === "user" ? "bg-blue-500/10 text-blue-400" : ""}
-              `}
-            >
-              {msg.role === "judge"
-                ? "JDG"
-                : msg.role === "prosecution"
-                  ? "PRO"
-                  : "YOU"}
-            </div>
-            <div className="flex flex-col gap-1 max-w-[80%]">
-              <span className="text-xs text-gray-600 uppercase tracking-wider font-mono">
-                {msg.role === "judge"
-                  ? "Judge"
-                  : msg.role === "prosecution"
-                    ? "Prosecution"
-                    : "You · Defense"}
-              </span>
-              <div
-                className={`px-4 py-3 rounded-xl text-sm leading-relaxed
-                  ${
-                    msg.role === "user"
-                      ? "bg-blue-500/10 border border-blue-500/20 text-blue-100"
-                      : "bg-[#111114] border border-white/10 text-gray-300"
-                  }
-                `}
-              >
-                {msg.content}
-              </div>
-            </div>
-          </div>
+          <Message key={i} msg={msg} />
         ))}
 
+        {/* Typing indicator */}
         {loading && (
-          <div className="flex gap-3">
-            <div className="w-7 h-7 rounded-full bg-yellow-500/10 border border-white/10 flex items-center justify-center text-xs font-mono text-yellow-400">
+          <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 9,
+                fontFamily: "monospace",
+                fontWeight: 700,
+                color: "#FBBF24",
+                background: "rgba(251,191,36,0.08)",
+                border: "1px solid rgba(251,191,36,0.18)",
+              }}
+            >
               JDG
             </div>
-            <div className="bg-[#111114] border border-white/10 px-4 py-3 rounded-xl flex gap-1 items-center">
-              <span
-                className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-                style={{ animationDelay: "0ms" }}
-              />
-              <span
-                className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-                style={{ animationDelay: "150ms" }}
-              />
-              <span
-                className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-                style={{ animationDelay: "300ms" }}
-              />
+            <div
+              style={{
+                padding: "14px 18px",
+                borderRadius: "4px 14px 14px 14px",
+                background: "rgba(251,191,36,0.06)",
+                border: "1px solid rgba(251,191,36,0.15)",
+                display: "flex",
+                gap: 5,
+                alignItems: "center",
+              }}
+            >
+              {[0, 150, 300].map((delay) => (
+                <span
+                  key={delay}
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "#6B7280",
+                    display: "inline-block",
+                    animation: "bounce 1s infinite",
+                    animationDelay: `${delay}ms`,
+                  }}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -207,47 +463,167 @@ export default function CourtroomClient({
         <div ref={bottomRef} />
       </div>
 
-      {/* Score bar */}
-      <div className="border-t border-white/10 bg-[#111114] px-6 py-3">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-1">
-            <span className="text-xs font-mono text-gray-500">
+      {/* ── SCORE BAR ── */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 20,
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(3,3,10,0.9)",
+          backdropFilter: "blur(12px)",
+          padding: "12px 2rem",
+          maxWidth: "100%",
+        }}
+      >
+        <div style={{ maxWidth: 780, margin: "0 auto" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              marginBottom: 6,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                fontFamily: "monospace",
+                color: "#4B5563",
+                whiteSpace: "nowrap",
+              }}
+            >
               Argument Strength
             </span>
-            <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div
+              style={{
+                flex: 1,
+                height: 6,
+                borderRadius: 3,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                overflow: "hidden",
+              }}
+            >
               <div
-                className={`h-full rounded-full transition-all duration-700 ${scoreColor}`}
-                style={{ width: `${score}%` }}
+                style={{
+                  height: "100%",
+                  borderRadius: 3,
+                  width: `${score}%`,
+                  background: scoreColor,
+                  transition: "width 0.7s ease, background 0.4s",
+                }}
               />
             </div>
-            <span className="text-xs font-mono text-gray-400 w-6 text-right">
+            <div
+              style={{
+                minWidth: 42,
+                padding: "2px 8px",
+                borderRadius: 6,
+                textAlign: "center",
+                background: scoreBg,
+                border: `1px solid ${scoreColor}40`,
+                fontSize: 12,
+                fontFamily: "monospace",
+                fontWeight: 700,
+                color: scoreColor,
+              }}
+            >
               {score}
-            </span>
+            </div>
           </div>
-          <p className="text-xs text-gray-600 italic">{feedback}</p>
+          <p
+            style={{
+              fontSize: 12,
+              color: "#4B5563",
+              fontStyle: "italic",
+              margin: 0,
+            }}
+          >
+            {feedback}
+          </p>
         </div>
       </div>
 
-      {/* Input */}
-      <div className="border-t border-white/10 bg-[#0a0a0b] px-4 py-4">
-        <div className="max-w-3xl mx-auto flex gap-3">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendArgument()}
-            placeholder="Type your legal argument..."
-            className="flex-1 bg-[#111114] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-white/30 transition-colors"
-          />
+      {/* ── INPUT ── */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 20,
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(3,3,10,0.95)",
+          backdropFilter: "blur(12px)",
+          padding: "1rem 1.5rem",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 780,
+            margin: "0 auto",
+            display: "flex",
+            gap: 12,
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 12,
+              padding: "0 16px",
+              transition: "border-color 0.2s",
+            }}
+          >
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && sendArgument()}
+              placeholder="Type your legal argument..."
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                fontSize: 14,
+                color: "#F0EEE8",
+                padding: "14px 0",
+                fontFamily: "inherit",
+              }}
+            />
+          </div>
           <button
             onClick={sendArgument}
             disabled={loading || !input.trim()}
-            className="bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-3 rounded-xl text-sm font-medium transition-colors"
+            style={{
+              background:
+                loading || !input.trim() ? "rgba(99,102,241,0.3)" : "#6366F1",
+              color: loading || !input.trim() ? "#6B7280" : "#fff",
+              border: "none",
+              borderRadius: 12,
+              padding: "14px 24px",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: loading || !input.trim() ? "not-allowed" : "pointer",
+              transition: "all 0.2s",
+              whiteSpace: "nowrap",
+              fontFamily: "inherit",
+            }}
           >
             Submit ↗
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+        input::placeholder { color: #374151; }
+      `}</style>
     </main>
   );
 }
