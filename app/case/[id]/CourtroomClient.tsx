@@ -1,10 +1,19 @@
 "use client";
+
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+
 type Message = {
   role: "judge" | "prosecution" | "user";
   content: string;
+};
+
+type ScoreEntry = {
+  turn: number;
+  score: number;
+  argument: string;
+  delta: number;
 };
 
 type CaseData = {
@@ -14,9 +23,8 @@ type CaseData = {
   facts: string;
 };
 
-function Message({ msg }: { msg: Message }) {
+function MessageBubble({ msg }: { msg: Message }) {
   const isUser = msg.role === "user";
-
   const config = {
     judge: {
       abbr: "JDG",
@@ -43,7 +51,6 @@ function Message({ msg }: { msg: Message }) {
       bubbleRadius: "14px 4px 14px 14px",
     },
   };
-
   const c = config[msg.role];
 
   return (
@@ -137,6 +144,7 @@ export default function CourtroomClient({
   const [feedback, setFeedback] = useState(
     "Present your opening argument to begin.",
   );
+  const [scoreHistory, setScoreHistory] = useState<ScoreEntry[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -147,6 +155,7 @@ export default function CourtroomClient({
     if (!input.trim() || loading) return;
 
     const userMessage: Message = { role: "user", content: input };
+    const currentInput = input;
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
@@ -165,6 +174,15 @@ export default function CourtroomClient({
 
       const data = await res.json();
 
+      const newEntry: ScoreEntry = {
+        turn: scoreHistory.length + 1,
+        score: data.score,
+        argument: currentInput,
+        delta: data.scoreDelta || 0,
+      };
+
+      const updatedHistory = [...scoreHistory, newEntry];
+
       const updatedMessages: Message[] = [
         ...messages,
         userMessage,
@@ -172,15 +190,24 @@ export default function CourtroomClient({
         { role: "prosecution", content: data.prosecutionResponse },
       ];
 
+      const bestArgument = updatedHistory.reduce(
+        (best, entry) => (entry.score > (best?.score ?? 0) ? entry : best),
+        updatedHistory[0],
+      );
+
       setMessages(updatedMessages);
       setScore(data.score);
       setFeedback(data.feedback);
+      setScoreHistory(updatedHistory);
 
       await supabase.from("sessions").upsert({
         user_id: userId,
         case_title: caseData.title,
         messages: updatedMessages,
         score: data.score,
+        score_history: updatedHistory,
+        best_argument: bestArgument?.argument || "",
+        completed: true,
       });
     } catch (err) {
       console.error(err);
@@ -238,7 +265,7 @@ export default function CourtroomClient({
         }}
       />
 
-      {/* ── TOP BAR ── */}
+      {/* TOP BAR */}
       <div
         style={{
           position: "relative",
@@ -256,9 +283,6 @@ export default function CourtroomClient({
           <Link
             href="/dashboard"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
               fontSize: 13,
               color: "#6B7280",
               textDecoration: "none",
@@ -290,23 +314,39 @@ export default function CourtroomClient({
             </p>
           </div>
         </div>
-        <span
-          style={{
-            fontSize: 11,
-            fontFamily: "monospace",
-            fontWeight: 600,
-            color: "#FBBF24",
-            background: "rgba(251,191,36,0.1)",
-            border: "1px solid rgba(251,191,36,0.2)",
-            padding: "3px 10px",
-            borderRadius: 100,
-          }}
-        >
-          {caseData.type}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Link
+            href="/sessions"
+            style={{
+              fontSize: 12,
+              color: "#818CF8",
+              textDecoration: "none",
+              background: "rgba(99,102,241,0.1)",
+              border: "1px solid rgba(99,102,241,0.2)",
+              padding: "5px 12px",
+              borderRadius: 8,
+            }}
+          >
+            Session history ↗
+          </Link>
+          <span
+            style={{
+              fontSize: 11,
+              fontFamily: "monospace",
+              fontWeight: 600,
+              color: "#FBBF24",
+              background: "rgba(251,191,36,0.1)",
+              border: "1px solid rgba(251,191,36,0.2)",
+              padding: "3px 10px",
+              borderRadius: 100,
+            }}
+          >
+            {caseData.type}
+          </span>
+        </div>
       </div>
 
-      {/* ── PERSONAS ── */}
+      {/* PERSONAS */}
       <div
         style={{
           position: "relative",
@@ -390,7 +430,7 @@ export default function CourtroomClient({
         ))}
       </div>
 
-      {/* ── MESSAGES ── */}
+      {/* MESSAGES */}
       <div
         style={{
           flex: 1,
@@ -407,10 +447,9 @@ export default function CourtroomClient({
         }}
       >
         {messages.map((msg, i) => (
-          <Message key={i} msg={msg} />
+          <MessageBubble key={i} msg={msg} />
         ))}
 
-        {/* Typing indicator */}
         {loading && (
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
             <div
@@ -463,7 +502,7 @@ export default function CourtroomClient({
         <div ref={bottomRef} />
       </div>
 
-      {/* ── SCORE BAR ── */}
+      {/* SCORE BAR */}
       <div
         style={{
           position: "relative",
@@ -472,7 +511,6 @@ export default function CourtroomClient({
           background: "rgba(3,3,10,0.9)",
           backdropFilter: "blur(12px)",
           padding: "12px 2rem",
-          maxWidth: "100%",
         }}
       >
         <div style={{ maxWidth: 780, margin: "0 auto" }}>
@@ -544,7 +582,7 @@ export default function CourtroomClient({
         </div>
       </div>
 
-      {/* ── INPUT ── */}
+      {/* INPUT */}
       <div
         style={{
           position: "relative",
@@ -573,7 +611,6 @@ export default function CourtroomClient({
               border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: 12,
               padding: "0 16px",
-              transition: "border-color 0.2s",
             }}
           >
             <input

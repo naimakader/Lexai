@@ -128,7 +128,6 @@ function CaseCard({ c }: { c: (typeof cases)[0] }) {
               fontWeight: 700,
               color: "#F0EEE8",
               letterSpacing: "-0.02em",
-              marginBottom: 4,
               margin: "0 0 4px",
             }}
           >
@@ -251,8 +250,21 @@ export default function DashboardClient() {
             LexAI
           </span>
         </Link>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ fontSize: 13, color: "#6B7280" }}>Dashboard</span>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          <Link
+            href="/sessions"
+            style={{
+              fontSize: 13,
+              color: "#9CA3AF",
+              textDecoration: "none",
+              padding: "6px 14px",
+              borderRadius: 8,
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            Session history
+          </Link>
           <UserButton afterSignOutUrl="/" />
         </div>
       </nav>
@@ -437,7 +449,6 @@ export default function DashboardClient() {
           </div>
         </div>
 
-        {/* Hover styles */}
         <style>{`
           .case-card:hover {
             border-color: rgba(99,102,241,0.35) !important;
