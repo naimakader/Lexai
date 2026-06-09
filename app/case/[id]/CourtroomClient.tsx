@@ -5,7 +5,12 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 type Message = {
-  role: "judge" | "prosecution" | "user";
+  role: "judge" | "prosecution" | "user" | "witness";
+  content: string;
+};
+
+type WitnessMessage = {
+  role: "witness" | "user";
   content: string;
 };
 
@@ -14,6 +19,7 @@ type ScoreEntry = {
   score: number;
   argument: string;
   delta: number;
+  mode: "defense" | "witness";
 };
 
 type CaseData = {
@@ -21,11 +27,28 @@ type CaseData = {
   type: string;
   description: string;
   facts: string;
+  witness: {
+    name: string;
+    role: string;
+    testimony: string;
+  };
 };
 
-function MessageBubble({ msg }: { msg: Message }) {
+type Mode = "defense" | "witness";
+
+function MessageBubble({ msg }: { msg: Message | WitnessMessage }) {
   const isUser = msg.role === "user";
-  const config = {
+  const config: Record<
+    string,
+    {
+      abbr: string;
+      label: string;
+      color: string;
+      bg: string;
+      border: string;
+      bubbleRadius: string;
+    }
+  > = {
     judge: {
       abbr: "JDG",
       label: "JUDGE",
@@ -40,6 +63,14 @@ function MessageBubble({ msg }: { msg: Message }) {
       color: "#F87171",
       bg: "rgba(248,113,113,0.08)",
       border: "rgba(248,113,113,0.18)",
+      bubbleRadius: "4px 14px 14px 14px",
+    },
+    witness: {
+      abbr: "WIT",
+      label: "WITNESS",
+      color: "#34D399",
+      bg: "rgba(52,211,153,0.08)",
+      border: "rgba(52,211,153,0.18)",
       bubbleRadius: "4px 14px 14px 14px",
     },
     user: {
@@ -128,6 +159,7 @@ export default function CourtroomClient({
   caseId: string;
   userId: string;
 }) {
+  const [mode, setMode] = useState<Mode>("defense");
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "judge",
@@ -138,6 +170,12 @@ export default function CourtroomClient({
       content: `Your Honor, the facts of this case are clear. ${caseData.facts} The prosecution is confident in its position.`,
     },
   ]);
+  const [witnessMessages, setWitnessMessages] = useState<WitnessMessage[]>([
+    {
+      role: "witness",
+      content: `I swear to tell the truth. My name is ${caseData.witness.name}, I am the ${caseData.witness.role}. ${caseData.witness.testimony}`,
+    },
+  ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [score, setScore] = useState(0);
@@ -145,15 +183,28 @@ export default function CourtroomClient({
     "Present your opening argument to begin.",
   );
   const [scoreHistory, setScoreHistory] = useState<ScoreEntry[]>([]);
+  const [contradiction, setContradiction] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const witnessBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (mode === "defense")
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (mode === "witness")
+      witnessBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, witnessMessages, mode]);
 
   async function sendArgument() {
     if (!input.trim() || loading) return;
 
+    if (mode === "defense") {
+      await sendDefenseArgument();
+    } else {
+      await sendWitnessQuestion();
+    }
+  }
+
+  async function sendDefenseArgument() {
     const userMessage: Message = { role: "user", content: input };
     const currentInput = input;
     setMessages((prev) => [...prev, userMessage]);
@@ -179,10 +230,10 @@ export default function CourtroomClient({
         score: data.score,
         argument: currentInput,
         delta: data.scoreDelta || 0,
+        mode: "defense",
       };
 
       const updatedHistory = [...scoreHistory, newEntry];
-
       const updatedMessages: Message[] = [
         ...messages,
         userMessage,
@@ -213,6 +264,68 @@ export default function CourtroomClient({
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function sendWitnessQuestion() {
+    const userMessage: WitnessMessage = { role: "user", content: input };
+    const currentInput = input;
+    setWitnessMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/witness", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          caseData,
+          witnessMessages: [...witnessMessages, userMessage],
+          userId,
+        }),
+      });
+
+      const data = await res.json();
+
+      const newEntry: ScoreEntry = {
+        turn: scoreHistory.length + 1,
+        score: data.score,
+        argument: currentInput,
+        delta: data.scoreDelta || 0,
+        mode: "witness",
+      };
+
+      const updatedHistory = [...scoreHistory, newEntry];
+      const updatedWitnessMessages: WitnessMessage[] = [
+        ...witnessMessages,
+        userMessage,
+        { role: "witness", content: data.witnessResponse },
+      ];
+
+      setWitnessMessages(updatedWitnessMessages);
+      setScore(data.score);
+      setFeedback(data.feedback);
+      setScoreHistory(updatedHistory);
+      setContradiction(data.contradiction || false);
+
+      await supabase.from("sessions").upsert({
+        user_id: userId,
+        case_title: caseData.title,
+        messages,
+        score: data.score,
+        score_history: updatedHistory,
+        best_argument:
+          updatedHistory.reduce(
+            (best, entry) => (entry.score > (best?.score ?? 0) ? entry : best),
+            updatedHistory[0],
+          )?.argument || "",
+        completed: true,
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setTimeout(() => setContradiction(false), 3000);
     }
   }
 
@@ -282,11 +395,7 @@ export default function CourtroomClient({
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <Link
             href="/dashboard"
-            style={{
-              fontSize: 13,
-              color: "#6B7280",
-              textDecoration: "none",
-            }}
+            style={{ fontSize: 13, color: "#6B7280", textDecoration: "none" }}
           >
             ← Back
           </Link>
@@ -346,89 +455,253 @@ export default function CourtroomClient({
         </div>
       </div>
 
-      {/* PERSONAS */}
+      {/* MODE TABS */}
       <div
         style={{
           position: "relative",
           zIndex: 10,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          padding: "12px 2rem",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
           background: "rgba(255,255,255,0.015)",
         }}
       >
-        {[
-          {
-            label: "Judge",
-            abbr: "JDG",
-            color: "#FBBF24",
-            bg: "rgba(251,191,36,0.1)",
-            border: "rgba(251,191,36,0.2)",
-            desc: "AI · Presiding",
-          },
-          {
-            label: "Prosecution",
-            abbr: "PRO",
-            color: "#F87171",
-            bg: "rgba(248,113,113,0.1)",
-            border: "rgba(248,113,113,0.2)",
-            desc: "AI · Opposing",
-          },
-          {
-            label: "You · Defense",
-            abbr: "YOU",
-            color: "#818CF8",
-            bg: "rgba(99,102,241,0.12)",
-            border: "rgba(99,102,241,0.25)",
-            desc: "Your role",
-          },
-        ].map((p, i) => (
+        <button
+          onClick={() => setMode("defense")}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "8px 18px",
+            borderRadius: 10,
+            border: "none",
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: 600,
+            fontFamily: "inherit",
+            background:
+              mode === "defense" ? "rgba(99,102,241,0.2)" : "transparent",
+            color: mode === "defense" ? "#818CF8" : "#6B7280",
+            outline:
+              mode === "defense"
+                ? "1px solid rgba(99,102,241,0.35)"
+                : "1px solid transparent",
+            transition: "all 0.2s",
+          }}
+        >
+          <span>⚖️</span> Defense Mode
+        </button>
+        <button
+          onClick={() => setMode("witness")}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "8px 18px",
+            borderRadius: 10,
+            border: "none",
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: 600,
+            fontFamily: "inherit",
+            background:
+              mode === "witness" ? "rgba(52,211,153,0.15)" : "transparent",
+            color: mode === "witness" ? "#34D399" : "#6B7280",
+            outline:
+              mode === "witness"
+                ? "1px solid rgba(52,211,153,0.3)"
+                : "1px solid transparent",
+            transition: "all 0.2s",
+          }}
+        >
+          <span>🎤</span> Cross-Examine Witness
+        </button>
+
+        {mode === "witness" && (
           <div
-            key={p.label}
             style={{
+              marginLeft: "auto",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              padding: "14px 12px",
-              borderRight: i < 2 ? "1px solid rgba(255,255,255,0.07)" : "none",
+              gap: 8,
+              padding: "6px 14px",
+              borderRadius: 10,
+              background: "rgba(52,211,153,0.08)",
+              border: "1px solid rgba(52,211,153,0.2)",
             }}
           >
             <div
               style={{
-                width: 32,
-                height: 32,
+                width: 8,
+                height: 8,
                 borderRadius: "50%",
-                flexShrink: 0,
+                background: "#34D399",
+              }}
+            />
+            <span style={{ fontSize: 12, color: "#34D399", fontWeight: 600 }}>
+              {caseData.witness.name} · {caseData.witness.role}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* PERSONAS — defense mode only */}
+      {mode === "defense" && (
+        <div
+          style={{
+            position: "relative",
+            zIndex: 10,
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.015)",
+          }}
+        >
+          {[
+            {
+              label: "Judge",
+              abbr: "JDG",
+              color: "#FBBF24",
+              bg: "rgba(251,191,36,0.1)",
+              border: "rgba(251,191,36,0.2)",
+              desc: "AI · Presiding",
+            },
+            {
+              label: "Prosecution",
+              abbr: "PRO",
+              color: "#F87171",
+              bg: "rgba(248,113,113,0.1)",
+              border: "rgba(248,113,113,0.2)",
+              desc: "AI · Opposing",
+            },
+            {
+              label: "You · Defense",
+              abbr: "YOU",
+              color: "#818CF8",
+              bg: "rgba(99,102,241,0.12)",
+              border: "rgba(99,102,241,0.25)",
+              desc: "Your role",
+            },
+          ].map((p, i) => (
+            <div
+              key={p.label}
+              style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 10,
-                fontFamily: "monospace",
-                fontWeight: 700,
-                color: p.color,
-                background: p.bg,
-                border: `1px solid ${p.border}`,
+                gap: 10,
+                padding: "14px 12px",
+                borderRight:
+                  i < 2 ? "1px solid rgba(255,255,255,0.07)" : "none",
               }}
             >
-              {p.abbr}
-            </div>
-            <div>
-              <span
+              <div
                 style={{
-                  display: "block",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#F0EEE8",
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 10,
+                  fontFamily: "monospace",
+                  fontWeight: 700,
+                  color: p.color,
+                  background: p.bg,
+                  border: `1px solid ${p.border}`,
                 }}
               >
-                {p.label}
-              </span>
-              <span style={{ fontSize: 11, color: "#4B5563" }}>{p.desc}</span>
+                {p.abbr}
+              </div>
+              <div>
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "#F0EEE8",
+                  }}
+                >
+                  {p.label}
+                </span>
+                <span style={{ fontSize: 11, color: "#4B5563" }}>{p.desc}</span>
+              </div>
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* WITNESS BANNER */}
+      {mode === "witness" && (
+        <div
+          style={{
+            position: "relative",
+            zIndex: 10,
+            padding: "14px 2rem",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(52,211,153,0.04)",
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+          }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 10,
+              fontFamily: "monospace",
+              fontWeight: 700,
+              color: "#34D399",
+              background: "rgba(52,211,153,0.1)",
+              border: "1px solid rgba(52,211,153,0.25)",
+            }}
+          >
+            WIT
           </div>
-        ))}
-      </div>
+          <div>
+            <span
+              style={{
+                display: "block",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#F0EEE8",
+              }}
+            >
+              {caseData.witness.name}
+            </span>
+            <span style={{ fontSize: 12, color: "#6B7280" }}>
+              {caseData.witness.role} · On the stand · Ask questions to find
+              contradictions
+            </span>
+          </div>
+          {contradiction && (
+            <div
+              style={{
+                marginLeft: "auto",
+                padding: "6px 16px",
+                borderRadius: 100,
+                background: "rgba(248,113,113,0.15)",
+                border: "1px solid rgba(248,113,113,0.3)",
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#F87171",
+                animation: "pulse 0.5s ease",
+              }}
+            >
+              ⚡ CONTRADICTION CAUGHT — Score bonus!
+            </div>
+          )}
+        </div>
+      )}
 
       {/* MESSAGES */}
       <div
@@ -446,9 +719,11 @@ export default function CourtroomClient({
           margin: "0 auto",
         }}
       >
-        {messages.map((msg, i) => (
-          <MessageBubble key={i} msg={msg} />
-        ))}
+        {mode === "defense" &&
+          messages.map((msg, i) => <MessageBubble key={i} msg={msg} />)}
+
+        {mode === "witness" &&
+          witnessMessages.map((msg, i) => <MessageBubble key={i} msg={msg} />)}
 
         {loading && (
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -463,19 +738,31 @@ export default function CourtroomClient({
                 fontSize: 9,
                 fontFamily: "monospace",
                 fontWeight: 700,
-                color: "#FBBF24",
-                background: "rgba(251,191,36,0.08)",
-                border: "1px solid rgba(251,191,36,0.18)",
+                color: mode === "witness" ? "#34D399" : "#FBBF24",
+                background:
+                  mode === "witness"
+                    ? "rgba(52,211,153,0.08)"
+                    : "rgba(251,191,36,0.08)",
+                border:
+                  mode === "witness"
+                    ? "1px solid rgba(52,211,153,0.18)"
+                    : "1px solid rgba(251,191,36,0.18)",
               }}
             >
-              JDG
+              {mode === "witness" ? "WIT" : "JDG"}
             </div>
             <div
               style={{
                 padding: "14px 18px",
                 borderRadius: "4px 14px 14px 14px",
-                background: "rgba(251,191,36,0.06)",
-                border: "1px solid rgba(251,191,36,0.15)",
+                background:
+                  mode === "witness"
+                    ? "rgba(52,211,153,0.06)"
+                    : "rgba(251,191,36,0.06)",
+                border:
+                  mode === "witness"
+                    ? "1px solid rgba(52,211,153,0.15)"
+                    : "1px solid rgba(251,191,36,0.15)",
                 display: "flex",
                 gap: 5,
                 alignItems: "center",
@@ -499,7 +786,7 @@ export default function CourtroomClient({
           </div>
         )}
 
-        <div ref={bottomRef} />
+        <div ref={mode === "defense" ? bottomRef : witnessBottomRef} />
       </div>
 
       {/* SCORE BAR */}
@@ -530,7 +817,9 @@ export default function CourtroomClient({
                 whiteSpace: "nowrap",
               }}
             >
-              Argument Strength
+              {mode === "witness"
+                ? "Cross-Examination Score"
+                : "Argument Strength"}
             </span>
             <div
               style={{
@@ -608,9 +897,13 @@ export default function CourtroomClient({
               display: "flex",
               alignItems: "center",
               background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              border:
+                mode === "witness"
+                  ? "1px solid rgba(52,211,153,0.2)"
+                  : "1px solid rgba(255,255,255,0.1)",
               borderRadius: 12,
               padding: "0 16px",
+              transition: "border-color 0.2s",
             }}
           >
             <input
@@ -618,7 +911,11 @@ export default function CourtroomClient({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendArgument()}
-              placeholder="Type your legal argument..."
+              placeholder={
+                mode === "witness"
+                  ? `Ask ${caseData.witness.name} a question...`
+                  : "Type your legal argument..."
+              }
               style={{
                 flex: 1,
                 background: "transparent",
@@ -636,7 +933,11 @@ export default function CourtroomClient({
             disabled={loading || !input.trim()}
             style={{
               background:
-                loading || !input.trim() ? "rgba(99,102,241,0.3)" : "#6366F1",
+                loading || !input.trim()
+                  ? "rgba(99,102,241,0.3)"
+                  : mode === "witness"
+                    ? "#059669"
+                    : "#6366F1",
               color: loading || !input.trim() ? "#6B7280" : "#fff",
               border: "none",
               borderRadius: 12,
@@ -649,7 +950,7 @@ export default function CourtroomClient({
               fontFamily: "inherit",
             }}
           >
-            Submit ↗
+            {mode === "witness" ? "Ask ↗" : "Submit ↗"}
           </button>
         </div>
       </div>
@@ -658,6 +959,11 @@ export default function CourtroomClient({
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
+        }
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
         }
         input::placeholder { color: #374151; }
       `}</style>
