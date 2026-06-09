@@ -25,11 +25,12 @@ Moot court is how law students learn to argue. The problem:
 
 LexAI puts you in a real courtroom simulation. You argue as the defense. Three AI personas respond to every argument you make:
 
-| Persona     | Role             | Behavior                                                      |
-| ----------- | ---------------- | ------------------------------------------------------------- |
-| Judge       | Presiding        | Evaluates arguments, asks follow-up questions, issues rulings |
-| Prosecution | Opposing counsel | Counters every argument aggressively                          |
-| You         | Defense          | Argue your case, cite precedents, build your strategy         |
+| Persona     | Role             | Behavior                                                                |
+| ----------- | ---------------- | ----------------------------------------------------------------------- |
+| Judge       | Presiding        | Evaluates arguments, asks follow-up questions, issues rulings           |
+| Prosecution | Opposing counsel | Counters every argument aggressively                                    |
+| Witness     | On the stand     | Answers questions, tries to stay consistent, stumbles on contradictions |
+| You         | Defense          | Argue your case, cite precedents, cross-examine the witness             |
 
 After each session a replay timeline shows:
 
@@ -44,18 +45,28 @@ After each session a replay timeline shows:
 
 ### Courtroom Simulator
 
-- 3 real landmark cases included (Miranda, contract breach, self-defense)
+- 3 real landmark cases included — Miranda, contract breach, self-defense
 - AI judge and prosecutor respond dynamically to your exact arguments
 - Real-time argument scoring from 0 to 100 on logic, precedent, and persuasiveness
 - Live coaching feedback after every turn
 
+### Witness Cross-Examination
+
+- Switch to cross-examination mode inside any case with one click
+- AI witness stays consistent with original testimony across the entire session
+- Contradiction detection — catch the witness in a lie and get a score bonus
+- Contradiction banner flashes when you successfully expose an inconsistency
+- Green color system clearly separates witness mode from defense mode
+- Coaching feedback after every question
+
 ### Session Replay Timeline
 
 - Every session saved automatically to Supabase
-- Visual score progression bar chart
+- Visual score progression bar chart showing every turn
 - Best argument highlighted with a star badge
-- Full argument timeline with score delta per turn
+- Full argument timeline with score delta per turn showing plus or minus
 - Replay any past session at any time from session history
+- Defense and witness turns tracked separately in the same session
 
 ### Authentication and Persistence
 
@@ -67,8 +78,9 @@ After each session a replay timeline shows:
 
 - FAANG-level dark design system
 - Framer Motion animations on landing page
-- Color-coded personas — Judge yellow, Prosecution red, Defense blue
+- Color-coded personas — Judge yellow, Prosecution red, Witness green, Defense blue
 - Fully responsive across all screen sizes
+- Blur backdrop navigation bars
 
 ---
 
@@ -167,7 +179,9 @@ create table sessions (
 lexai/
 ├── app/
 │   ├── api/
-│   │   └── courtroom/
+│   │   ├── courtroom/
+│   │   │   └── route.ts
+│   │   └── witness/
 │   │       └── route.ts
 │   ├── case/
 │   │   └── [id]/
@@ -204,7 +218,7 @@ lexai/
 - [x] Real-time argument scoring
 - [x] Session history page
 - [x] Session replay with score timeline and bar chart
-- [ ] AI witness cross-examination mode
+- [x] AI witness cross-examination with contradiction detection
 - [ ] Shareable session cards
 - [ ] Professor dashboard for assigning cases to students
 - [ ] 200 plus landmark cases
@@ -218,9 +232,9 @@ Most portfolio projects are todo apps or weather dashboards. LexAI is different.
 
 **Real problem.** 1.8 million law students globally have no affordable way to practice oral arguments. This solves that directly.
 
-**Technical depth.** Multi-persona AI state management, structured JSON outputs, real-time scoring, session persistence, and replay timelines. This is not a tutorial project.
+**Technical depth.** Multi-persona AI state management, structured JSON outputs, real-time scoring, session persistence, replay timelines, and witness contradiction detection. This is not a tutorial project.
 
-**Product thinking.** Every feature was designed around user behavior. The replay timeline exists because students need to know which argument won or lost the case, not just the final score.
+**Product thinking.** Every feature was designed around user behavior. The replay timeline exists because students need to know which argument won or lost the case. The witness mode exists because cross-examination is a completely different skill from opening arguments.
 
 **Scalable architecture.** Server components for data fetching, client components for interactivity, API routes for AI calls, Supabase for persistence. Clean separation of concerns throughout.
 
