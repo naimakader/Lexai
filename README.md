@@ -25,12 +25,12 @@ Moot court is how law students learn to argue. The problem:
 
 LexAI puts you in a real courtroom simulation. You argue as the defense. Three AI personas respond to every argument you make:
 
-| Persona     | Role             | Behavior                                                                |
-| ----------- | ---------------- | ----------------------------------------------------------------------- |
-| Judge       | Presiding        | Evaluates arguments, asks follow-up questions, issues rulings           |
-| Prosecution | Opposing counsel | Counters every argument aggressively                                    |
-| Witness     | On the stand     | Answers questions, tries to stay consistent, stumbles on contradictions |
-| You         | Defense          | Argue your case, cite precedents, cross-examine the witness             |
+| Persona     | Role             | Behavior                                                        |
+| ----------- | ---------------- | --------------------------------------------------------------- |
+| Judge       | Presiding        | Evaluates arguments, asks follow-up questions, issues rulings   |
+| Prosecution | Opposing counsel | Counters every argument aggressively                            |
+| Witness     | On the stand     | Answers questions, stays consistent, stumbles on contradictions |
+| You         | Defense          | Argue your case, cite precedents, cross-examine the witness     |
 
 After each session a replay timeline shows:
 
@@ -63,10 +63,18 @@ After each session a replay timeline shows:
 
 - Every session saved automatically to Supabase
 - Visual score progression bar chart showing every turn
+- Defense turns and witness turns tracked and labeled separately
 - Best argument highlighted with a star badge
-- Full argument timeline with score delta per turn showing plus or minus
+- Full argument timeline with score delta per turn
 - Replay any past session at any time from session history
-- Defense and witness turns tracked separately in the same session
+
+### Shareable Session Cards
+
+- Beautiful share page generated for every completed session
+- Dynamic OG image generated using Next.js Edge Runtime
+- One-click copy share link
+- LinkedIn and Twitter share buttons with pre-filled text
+- Preview the share image before posting
 
 ### Authentication and Persistence
 
@@ -94,6 +102,7 @@ After each session a replay timeline shows:
 | Auth       | Clerk                          | Production-grade authentication with zero config  |
 | Database   | Supabase PostgreSQL            | Real-time, scalable, generous free tier           |
 | AI         | OpenAI GPT-4o-mini             | Fast, cost-efficient, structured JSON outputs     |
+| OG Images  | Vercel OG                      | Dynamic social share images on the edge           |
 | Animations | Framer Motion                  | Smooth page and component transitions             |
 | Deployment | Vercel                         | Edge network, instant deploys from GitHub         |
 
@@ -181,8 +190,10 @@ lexai/
 │   ├── api/
 │   │   ├── courtroom/
 │   │   │   └── route.ts
-│   │   └── witness/
-│   │       └── route.ts
+│   │   ├── witness/
+│   │   │   └── route.ts
+│   │   └── og/
+│   │       └── route.tsx
 │   ├── case/
 │   │   └── [id]/
 │   │       ├── page.tsx
@@ -193,7 +204,10 @@ lexai/
 │   ├── sessions/
 │   │   ├── page.tsx
 │   │   └── [id]/
-│   │       └── page.tsx
+│   │       ├── page.tsx
+│   │       └── share/
+│   │           ├── page.tsx
+│   │           └── ShareClient.tsx
 │   ├── sign-in/[[...sign-in]]/
 │   │   └── page.tsx
 │   ├── sign-up/[[...sign-up]]/
@@ -219,7 +233,7 @@ lexai/
 - [x] Session history page
 - [x] Session replay with score timeline and bar chart
 - [x] AI witness cross-examination with contradiction detection
-- [ ] Shareable session cards
+- [x] Shareable session cards with dynamic OG image generation
 - [ ] Professor dashboard for assigning cases to students
 - [ ] 200 plus landmark cases
 - [ ] Mobile app
@@ -232,11 +246,11 @@ Most portfolio projects are todo apps or weather dashboards. LexAI is different.
 
 **Real problem.** 1.8 million law students globally have no affordable way to practice oral arguments. This solves that directly.
 
-**Technical depth.** Multi-persona AI state management, structured JSON outputs, real-time scoring, session persistence, replay timelines, and witness contradiction detection. This is not a tutorial project.
+**Technical depth.** Multi-persona AI state management, structured JSON outputs, real-time scoring, session persistence, replay timelines, witness contradiction detection, and dynamic OG image generation on the edge. This is not a tutorial project.
 
-**Product thinking.** Every feature was designed around user behavior. The replay timeline exists because students need to know which argument won or lost the case. The witness mode exists because cross-examination is a completely different skill from opening arguments.
+**Product thinking.** Every feature was designed around user behavior. The replay timeline exists because students need to know which argument won or lost the case. The witness mode exists because cross-examination is a completely different skill. The share card exists because students sharing results is the best marketing.
 
-**Scalable architecture.** Server components for data fetching, client components for interactivity, API routes for AI calls, Supabase for persistence. Clean separation of concerns throughout.
+**Scalable architecture.** Server components for data fetching, client components for interactivity, API routes for AI calls, Supabase for persistence, edge runtime for OG images. Clean separation of concerns throughout.
 
 ---
 
