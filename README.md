@@ -313,6 +313,7 @@ lexai/
 - [x] AI witness cross-examination with contradiction detection
 - [x] Shareable session cards with dynamic OG image generation
 - [x] Professor dashboard with class management and student analytics
+- [x] Real-time multiplayer battle mode with Supabase Realtime
 - [ ] 200 plus landmark cases
 - [ ] Mobile app
 
