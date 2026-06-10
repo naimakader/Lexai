@@ -76,9 +76,20 @@ After each session a replay timeline shows:
 - LinkedIn and Twitter share buttons with pre-filled text
 - Preview the share image before posting
 
+### Professor Dashboard
+
+- Professors activate a dedicated dashboard with one click
+- Create classes and get auto-generated join codes
+- Students join classes using the join code
+- Assign specific cases to a class with optional due dates
+- Track every student's sessions, scores, and completion rate
+- Class overview shows assignment completion progress per case
+- Average score per assignment calculated automatically
+
 ### Authentication and Persistence
 
 - Clerk authentication with email and Google
+- Role-based access — student and professor roles
 - Every session tied to the signed-in user
 - Sessions ordered by date and accessible from the dashboard
 
@@ -120,6 +131,37 @@ create table sessions (
   score_history jsonb default '[]',
   best_argument text default '',
   completed boolean default false,
+  created_at timestamp with time zone default timezone('utc', now())
+);
+
+create table profiles (
+  id text primary key,
+  email text,
+  role text default 'student',
+  created_at timestamp with time zone default timezone('utc', now())
+);
+
+create table classes (
+  id uuid default gen_random_uuid() primary key,
+  professor_id text not null,
+  name text not null,
+  join_code text unique not null,
+  created_at timestamp with time zone default timezone('utc', now())
+);
+
+create table class_members (
+  id uuid default gen_random_uuid() primary key,
+  class_id uuid references classes(id) on delete cascade,
+  student_id text not null,
+  joined_at timestamp with time zone default timezone('utc', now())
+);
+
+create table assignments (
+  id uuid default gen_random_uuid() primary key,
+  class_id uuid references classes(id) on delete cascade,
+  case_id text not null,
+  case_title text not null,
+  due_date text,
   created_at timestamp with time zone default timezone('utc', now())
 );
 ```
@@ -178,6 +220,37 @@ create table sessions (
   completed boolean default false,
   created_at timestamp with time zone default timezone('utc', now())
 );
+
+create table profiles (
+  id text primary key,
+  email text,
+  role text default 'student',
+  created_at timestamp with time zone default timezone('utc', now())
+);
+
+create table classes (
+  id uuid default gen_random_uuid() primary key,
+  professor_id text not null,
+  name text not null,
+  join_code text unique not null,
+  created_at timestamp with time zone default timezone('utc', now())
+);
+
+create table class_members (
+  id uuid default gen_random_uuid() primary key,
+  class_id uuid references classes(id) on delete cascade,
+  student_id text not null,
+  joined_at timestamp with time zone default timezone('utc', now())
+);
+
+create table assignments (
+  id uuid default gen_random_uuid() primary key,
+  class_id uuid references classes(id) on delete cascade,
+  case_id text not null,
+  case_title text not null,
+  due_date text,
+  created_at timestamp with time zone default timezone('utc', now())
+);
 ```
 
 ---
@@ -192,6 +265,8 @@ lexai/
 │   │   │   └── route.ts
 │   │   ├── witness/
 │   │   │   └── route.ts
+│   │   ├── professor/
+│   │   │   └── route.ts
 │   │   └── og/
 │   │       └── route.tsx
 │   ├── case/
@@ -201,6 +276,9 @@ lexai/
 │   ├── dashboard/
 │   │   ├── page.tsx
 │   │   └── DashboardClient.tsx
+│   ├── professor/
+│   │   ├── page.tsx
+│   │   └── ProfessorClient.tsx
 │   ├── sessions/
 │   │   ├── page.tsx
 │   │   └── [id]/
@@ -234,7 +312,7 @@ lexai/
 - [x] Session replay with score timeline and bar chart
 - [x] AI witness cross-examination with contradiction detection
 - [x] Shareable session cards with dynamic OG image generation
-- [ ] Professor dashboard for assigning cases to students
+- [x] Professor dashboard with class management and student analytics
 - [ ] 200 plus landmark cases
 - [ ] Mobile app
 
@@ -246,11 +324,11 @@ Most portfolio projects are todo apps or weather dashboards. LexAI is different.
 
 **Real problem.** 1.8 million law students globally have no affordable way to practice oral arguments. This solves that directly.
 
-**Technical depth.** Multi-persona AI state management, structured JSON outputs, real-time scoring, session persistence, replay timelines, witness contradiction detection, and dynamic OG image generation on the edge. This is not a tutorial project.
+**Technical depth.** Multi-persona AI state management, structured JSON outputs, real-time scoring, session persistence, replay timelines, witness contradiction detection, dynamic OG image generation, and role-based professor dashboard. This is not a tutorial project.
 
-**Product thinking.** Every feature was designed around user behavior. The replay timeline exists because students need to know which argument won or lost the case. The witness mode exists because cross-examination is a completely different skill. The share card exists because students sharing results is the best marketing.
+**Product thinking.** Every feature was designed around user behavior. The replay timeline exists because students need to know which argument won or lost the case. The witness mode exists because cross-examination is a completely different skill. The professor dashboard exists because adoption happens through institutions not individuals.
 
-**Scalable architecture.** Server components for data fetching, client components for interactivity, API routes for AI calls, Supabase for persistence, edge runtime for OG images. Clean separation of concerns throughout.
+**Scalable architecture.** Server components for data fetching, client components for interactivity, API routes for AI calls, Supabase for persistence, edge runtime for OG images, role-based access control throughout. Clean separation of concerns.
 
 ---
 
