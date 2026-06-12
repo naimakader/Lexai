@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { AIError } from "@/app/components/ErrorBoundary";
 
 type Message = {
   role: "judge" | "prosecution" | "user" | "witness";
@@ -184,6 +185,7 @@ export default function CourtroomClient({
   );
   const [scoreHistory, setScoreHistory] = useState<ScoreEntry[]>([]);
   const [contradiction, setContradiction] = useState(false);
+  const [aiError, setAiError] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const witnessBottomRef = useRef<HTMLDivElement>(null);
 
@@ -196,7 +198,7 @@ export default function CourtroomClient({
 
   async function sendArgument() {
     if (!input.trim() || loading) return;
-
+    setAiError(false);
     if (mode === "defense") {
       await sendDefenseArgument();
     } else {
@@ -223,7 +225,9 @@ export default function CourtroomClient({
         }),
       });
 
+      if (!res.ok) throw new Error("API error");
       const data = await res.json();
+      if (!data.judgeResponse) throw new Error("Invalid response");
 
       const newEntry: ScoreEntry = {
         turn: scoreHistory.length + 1,
@@ -262,6 +266,8 @@ export default function CourtroomClient({
       });
     } catch (err) {
       console.error(err);
+      setAiError(true);
+      setMessages((prev) => prev.filter((m) => m.content !== input));
     } finally {
       setLoading(false);
     }
@@ -285,7 +291,9 @@ export default function CourtroomClient({
         }),
       });
 
+      if (!res.ok) throw new Error("API error");
       const data = await res.json();
+      if (!data.witnessResponse) throw new Error("Invalid response");
 
       const newEntry: ScoreEntry = {
         turn: scoreHistory.length + 1,
@@ -323,6 +331,8 @@ export default function CourtroomClient({
       });
     } catch (err) {
       console.error(err);
+      setAiError(true);
+      setWitnessMessages((prev) => prev.filter((m) => m.content !== input));
     } finally {
       setLoading(false);
       setTimeout(() => setContradiction(false), 3000);
@@ -786,6 +796,16 @@ export default function CourtroomClient({
           </div>
         )}
 
+        {/* AI Error */}
+        {aiError && (
+          <AIError
+            onRetry={() => {
+              setAiError(false);
+              setInput("");
+            }}
+          />
+        )}
+
         <div ref={mode === "defense" ? bottomRef : witnessBottomRef} />
       </div>
 
@@ -903,7 +923,6 @@ export default function CourtroomClient({
                   : "1px solid rgba(255,255,255,0.1)",
               borderRadius: 12,
               padding: "0 16px",
-              transition: "border-color 0.2s",
             }}
           >
             <input

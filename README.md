@@ -86,6 +86,14 @@ After each session a replay timeline shows:
 - Class overview shows assignment completion progress per case
 - Average score per assignment calculated automatically
 
+### Error Boundaries
+
+- Global error boundary catches unexpected crashes and shows a friendly message
+- AI-specific error component shows when OpenAI or API calls fail
+- Retry button lets users try again without refreshing the page
+- Session load error component for database fetch failures
+- All errors logged to console for debugging without exposing internals to users
+
 ### Loading Skeletons
 
 - Shimmer skeleton cards on dashboard while cases load
@@ -322,6 +330,7 @@ lexai/
 - [x] Professor dashboard with class management and student analytics
 - [x] Real-time multiplayer battle mode with Supabase Realtime
 - [x] Loading skeletons with shimmer animation on all data pages- [ ] 200 plus landmark cases
+- [x] Error boundaries with friendly AI failure messages and retry logic
 - [ ] Mobile app
 
 ---
