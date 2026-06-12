@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { auth } from "@clerk/nextjs/server";
-
 function generateJoinCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
-
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   const { action, className, joinCode, caseId, caseTitle, dueDate, classId } =
     await req.json();
-
   if (action === "become_professor") {
     await supabase.from("profiles").upsert({
       id: userId,

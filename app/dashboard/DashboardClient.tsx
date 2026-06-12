@@ -1,6 +1,12 @@
 "use client";
+import { useEffect, useState } from "react";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import {
+  SkeletonCard,
+  SkeletonStatCard,
+  skeletonStyles,
+} from "@/app/components/Skeleton";
 
 const cases = [
   {
@@ -168,6 +174,13 @@ function CaseCard({ c }: { c: (typeof cases)[0] }) {
 }
 
 export default function DashboardClient() {
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoaded(true), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <main
       style={{ minHeight: "100vh", background: "#03030A", color: "#F0EEE8" }}
@@ -359,37 +372,48 @@ export default function DashboardClient() {
             marginBottom: "3rem",
           }}
         >
-          {[
-            { num: "3", label: "Cases available" },
-            { num: "0", label: "Sessions completed" },
-            { num: "—", label: "Best score" },
-          ].map((s) => (
-            <div
-              key={s.label}
-              style={{
-                padding: "1.25rem 1.5rem",
-                background: "rgba(255,255,255,0.025)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: 14,
-              }}
-            >
-              <span
+          {!loaded ? (
+            <>
+              <SkeletonStatCard />
+              <SkeletonStatCard />
+              <SkeletonStatCard />
+            </>
+          ) : (
+            [
+              { num: "3", label: "Cases available" },
+              { num: "0", label: "Sessions completed" },
+              { num: "—", label: "Best score" },
+            ].map((s) => (
+              <div
+                key={s.label}
                 style={{
-                  display: "block",
-                  fontSize: "2rem",
-                  fontWeight: 800,
-                  color: "#fff",
-                  letterSpacing: "-0.04em",
-                  lineHeight: 1,
-                  marginBottom: 4,
+                  padding: "1.25rem 1.5rem",
+                  background: "rgba(255,255,255,0.025)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: 14,
                 }}
               >
-                {s.num}
-              </span>
-              <span style={{ fontSize: 12, color: "#6B7280" }}>{s.label}</span>
-            </div>
-          ))}
+                <span
+                  style={{
+                    display: "block",
+                    fontSize: "2rem",
+                    fontWeight: 800,
+                    color: "#fff",
+                    letterSpacing: "-0.04em",
+                    lineHeight: 1,
+                    marginBottom: 4,
+                  }}
+                >
+                  {s.num}
+                </span>
+                <span style={{ fontSize: 12, color: "#6B7280" }}>
+                  {s.label}
+                </span>
+              </div>
+            ))
+          )}
         </div>
+
         {/* Battle banner */}
         <Link
           href="/battle"
@@ -461,6 +485,7 @@ export default function DashboardClient() {
             </div>
           </div>
         </Link>
+
         {/* Section label */}
         <span
           style={{
@@ -479,64 +504,73 @@ export default function DashboardClient() {
 
         {/* Case cards */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {cases.map((c) => (
-            <CaseCard key={c.id} c={c} />
-          ))}
+          {!loaded ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : (
+            cases.map((c) => <CaseCard key={c.id} c={c} />)
+          )}
         </div>
 
         {/* Coming soon */}
-        <div
-          style={{
-            marginTop: "2rem",
-            padding: "1.25rem 2rem",
-            background: "rgba(255,255,255,0.015)",
-            border: "1px dashed rgba(255,255,255,0.08)",
-            borderRadius: 16,
-            display: "flex",
-            alignItems: "center",
-            gap: "1.5rem",
-          }}
-        >
+        {loaded && (
           <div
             style={{
-              width: 52,
-              height: 52,
-              borderRadius: 14,
-              flexShrink: 0,
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.06)",
+              marginTop: "2rem",
+              padding: "1.25rem 2rem",
+              background: "rgba(255,255,255,0.015)",
+              border: "1px dashed rgba(255,255,255,0.08)",
+              borderRadius: 16,
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.5rem",
-              opacity: 0.4,
+              gap: "1.5rem",
             }}
           >
-            🔒
-          </div>
-          <div>
-            <h3
+            <div
               style={{
-                fontSize: 15,
-                fontWeight: 600,
-                color: "#4B5563",
-                marginBottom: 4,
+                width: 52,
+                height: 52,
+                borderRadius: 14,
+                flexShrink: 0,
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.5rem",
+                opacity: 0.4,
               }}
             >
-              More cases coming soon
-            </h3>
-            <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>
-              Roe v. Wade, Brown v. Board of Education, and 200+ more in
-              progress.
-            </p>
+              🔒
+            </div>
+            <div>
+              <h3
+                style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "#4B5563",
+                  marginBottom: 4,
+                }}
+              >
+                More cases coming soon
+              </h3>
+              <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>
+                Roe v. Wade, Brown v. Board of Education, and 200+ more in
+                progress.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <style>{`
           .case-card:hover {
             border-color: rgba(99,102,241,0.35) !important;
             background: rgba(99,102,241,0.05) !important;
           }
+          ${skeletonStyles}
         `}</style>
       </div>
     </main>
