@@ -86,6 +86,13 @@ After each session a replay timeline shows:
 - Class overview shows assignment completion progress per case
 - Average score per assignment calculated automatically
 
+### Loading Skeletons
+
+- Shimmer skeleton cards on dashboard while cases load
+- Shimmer skeleton cards on sessions page while history loads
+- React Suspense boundaries for streaming server components
+- Zero layout shift — skeletons match exact dimensions of real content
+
 ### Authentication and Persistence
 
 - Clerk authentication with email and Google
@@ -314,7 +321,7 @@ lexai/
 - [x] Shareable session cards with dynamic OG image generation
 - [x] Professor dashboard with class management and student analytics
 - [x] Real-time multiplayer battle mode with Supabase Realtime
-- [ ] 200 plus landmark cases
+- [x] Loading skeletons with shimmer animation on all data pages- [ ] 200 plus landmark cases
 - [ ] Mobile app
 
 ---
