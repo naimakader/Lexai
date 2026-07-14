@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0a0b;
+  color: #f0eee8;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+
+  /* Hide nav links on mobile */
+  .nav-desktop-links {
+    display: none !important;
+  }
+
+  /* Stack stats grid on mobile */
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Stack personas on mobile */
+  .personas-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Full width cards on mobile */
+  .case-card {
+    padding: 1rem !important;
+  }
+
+  /* Smaller heading on mobile */
+  h1 {
+    font-size: clamp(1.6rem, 5vw, 3rem) !important;
+  }
+
+  /* Reduce padding on mobile */
+  .mobile-pad {
+    padding: 1.5rem 1rem !important;
+  }
+}
