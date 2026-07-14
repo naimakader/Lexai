@@ -223,7 +223,7 @@ export default function ProfessorClient({
           >
             Student view
           </Link>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </div>
       </nav>
 

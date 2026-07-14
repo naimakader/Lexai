@@ -61,7 +61,7 @@ function NavButtons() {
         >
           Dashboard →
         </Link>
-        <UserButton afterSignOutUrl="/" />
+        <UserButton />
       </div>
     );
   }

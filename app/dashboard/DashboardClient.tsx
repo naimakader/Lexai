@@ -296,7 +296,7 @@ export default function DashboardClient() {
               Professor
             </Link>
           </div>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton  />
         </div>
       </nav>
 
