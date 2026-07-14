@@ -1,5 +1,4 @@
-import type { Theme } from "@clerk/types";
-export const clerkDarkTheme: Theme = {
+export const clerkDarkTheme = {
   variables: {
     colorBackground: "#0D0D12",
     colorInputBackground: "#111118",
