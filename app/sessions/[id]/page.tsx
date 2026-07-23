@@ -43,11 +43,18 @@ export default async function SessionReplayPage({
         ? "rgba(251,191,36,0.2)"
         : "rgba(248,113,113,0.2)";
 
-  const caseIdMap: Record<string, string> = {
-    "State v. Miranda": "miranda",
-    "TechCorp v. DevStudio": "contract-breach",
-    "State v. Johnson": "selfdefense",
-  };
+ const caseIdMap: Record<string, string> = {
+  "State v. Miranda": "miranda",
+  "TechCorp v. DevStudio": "contract-breach",
+  "State v. Johnson": "selfdefense",
+  "Brown v. Board of Education": "brown-v-board",
+  "Roe v. Wade": "roe-v-wade",
+  "Apple Inc. v. Samsung Electronics": "apple-v-samsung",
+  "Obergefell v. Hodges": "obergefell-v-hodges",
+  "Citizens United v. FEC": "citizens-united",
+  "McDonald v. City of Chicago": "mcdonald-v-chicago",
+  "United States v. Skilling": "enron-fraud",
+}
 
   const date = new Date(session.created_at).toLocaleDateString("en-US", {
     month: "long",

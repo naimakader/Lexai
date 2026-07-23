@@ -173,6 +173,20 @@ function getCaseFacts(caseId: string) {
       "DevStudio was hired to build a web app in 3 months for $50,000. They delivered 6 weeks late due to unclear requirements from TechCorp. TechCorp is suing for $200,000.",
     selfdefense:
       "The defendant punched another man outside a bar. Witnesses say the other man approached aggressively and made verbal threats first. The defendant has no prior record.",
+    "brown-v-board":
+      "Linda Brown was denied admission to an all-white school. The school board argues separate but equal facilities are constitutional under Plessy v. Ferguson.",
+    "roe-v-wade":
+      "Jane Roe challenges a Texas law criminalizing abortion. The state argues it has a compelling interest in protecting potential life.",
+    "apple-v-samsung":
+      "Apple claims Samsung copied iPhone design including rounded corners and pinch-to-zoom. Apple seeks over one billion dollars in damages.",
+    "obergefell-v-hodges":
+      "Ohio refused to recognize Jim Obergefell's same-sex marriage on his partner's death certificate. He argues this violates the Fourteenth Amendment.",
+    "citizens-united":
+      "Citizens United wanted to air a film critical of Hillary Clinton near a primary election. The FEC blocked it under campaign finance law.",
+    "mcdonald-v-chicago":
+      "Otis McDonald wants to keep a handgun at home for self-defense. Chicago's handgun ban prevents him from doing so.",
+    "enron-fraud":
+      "Jeffrey Skilling is charged with conspiracy and securities fraud. The government alleges he misled investors about Enron's financial health.",
   };
   return facts[caseId] || "No facts available.";
 }

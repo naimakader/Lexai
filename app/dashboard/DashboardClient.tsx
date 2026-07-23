@@ -7,7 +7,6 @@ import {
   SkeletonStatCard,
   skeletonStyles,
 } from "@/app/components/Skeleton";
-
 const cases = [
   {
     id: "miranda",
@@ -53,6 +52,111 @@ const cases = [
     diffBg: "rgba(248,113,113,0.1)",
     diffBorder: "rgba(248,113,113,0.2)",
     icon: "🛡️",
+  },
+  {
+    id: "brown-v-board",
+    type: "Constitutional",
+    typeColor: "#34D399",
+    typeBg: "rgba(52,211,153,0.1)",
+    typeBorder: "rgba(52,211,153,0.2)",
+    title: "Brown v. Board of Education",
+    description:
+      "Argue that racial segregation in public schools violates the Constitution.",
+    difficulty: "Advanced",
+    diffColor: "#F87171",
+    diffBg: "rgba(248,113,113,0.1)",
+    diffBorder: "rgba(248,113,113,0.2)",
+    icon: "🏫",
+  },
+  {
+    id: "roe-v-wade",
+    type: "Constitutional",
+    typeColor: "#34D399",
+    typeBg: "rgba(52,211,153,0.1)",
+    typeBorder: "rgba(52,211,153,0.2)",
+    title: "Roe v. Wade",
+    description:
+      "Defend a woman's constitutional right to privacy in medical decisions.",
+    difficulty: "Advanced",
+    diffColor: "#F87171",
+    diffBg: "rgba(248,113,113,0.1)",
+    diffBorder: "rgba(248,113,113,0.2)",
+    icon: "⚕️",
+  },
+  {
+    id: "apple-v-samsung",
+    type: "IP",
+    typeColor: "#818CF8",
+    typeBg: "rgba(129,140,248,0.1)",
+    typeBorder: "rgba(129,140,248,0.2)",
+    title: "Apple Inc. v. Samsung",
+    description:
+      "Defend Samsung against Apple's billion-dollar patent infringement claims.",
+    difficulty: "Intermediate",
+    diffColor: "#FBBF24",
+    diffBg: "rgba(251,191,36,0.1)",
+    diffBorder: "rgba(251,191,36,0.2)",
+    icon: "📱",
+  },
+  {
+    id: "obergefell-v-hodges",
+    type: "Constitutional",
+    typeColor: "#34D399",
+    typeBg: "rgba(52,211,153,0.1)",
+    typeBorder: "rgba(52,211,153,0.2)",
+    title: "Obergefell v. Hodges",
+    description:
+      "Argue that same-sex couples have a constitutional right to marry.",
+    difficulty: "Advanced",
+    diffColor: "#F87171",
+    diffBg: "rgba(248,113,113,0.1)",
+    diffBorder: "rgba(248,113,113,0.2)",
+    icon: "💍",
+  },
+  {
+    id: "citizens-united",
+    type: "Constitutional",
+    typeColor: "#34D399",
+    typeBg: "rgba(52,211,153,0.1)",
+    typeBorder: "rgba(52,211,153,0.2)",
+    title: "Citizens United v. FEC",
+    description:
+      "Defend the right of corporations to spend on political speech under the First Amendment.",
+    difficulty: "Advanced",
+    diffColor: "#F87171",
+    diffBg: "rgba(248,113,113,0.1)",
+    diffBorder: "rgba(248,113,113,0.2)",
+    icon: "🗳️",
+  },
+  {
+    id: "mcdonald-v-chicago",
+    type: "Constitutional",
+    typeColor: "#34D399",
+    typeBg: "rgba(52,211,153,0.1)",
+    typeBorder: "rgba(52,211,153,0.2)",
+    title: "McDonald v. City of Chicago",
+    description:
+      "Argue that the Second Amendment applies to state and local governments.",
+    difficulty: "Intermediate",
+    diffColor: "#FBBF24",
+    diffBg: "rgba(251,191,36,0.1)",
+    diffBorder: "rgba(251,191,36,0.2)",
+    icon: "🔫",
+  },
+  {
+    id: "enron-fraud",
+    type: "Criminal",
+    typeColor: "#FBBF24",
+    typeBg: "rgba(251,191,36,0.1)",
+    typeBorder: "rgba(251,191,36,0.2)",
+    title: "United States v. Skilling",
+    description:
+      "Defend Enron's CEO against securities fraud charges in one of history's biggest corporate scandals.",
+    difficulty: "Advanced",
+    diffColor: "#F87171",
+    diffBg: "rgba(248,113,113,0.1)",
+    diffBorder: "rgba(248,113,113,0.2)",
+    icon: "💰",
   },
 ];
 
@@ -296,7 +400,7 @@ export default function DashboardClient() {
               Professor
             </Link>
           </div>
-          <UserButton  />
+          <UserButton />
         </div>
       </nav>
 
@@ -386,7 +490,7 @@ export default function DashboardClient() {
             </>
           ) : (
             [
-              { num: "3", label: "Cases available" },
+              { num: "10", label: "Cases available" },
               { num: "0", label: "Sessions completed" },
               { num: "—", label: "Best score" },
             ].map((s) => (
@@ -520,56 +624,6 @@ export default function DashboardClient() {
             cases.map((c) => <CaseCard key={c.id} c={c} />)
           )}
         </div>
-
-        {/* Coming soon */}
-        {loaded && (
-          <div
-            style={{
-              marginTop: "2rem",
-              padding: "1.25rem 2rem",
-              background: "rgba(255,255,255,0.015)",
-              border: "1px dashed rgba(255,255,255,0.08)",
-              borderRadius: 16,
-              display: "flex",
-              alignItems: "center",
-              gap: "1.5rem",
-            }}
-          >
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 14,
-                flexShrink: 0,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "1.5rem",
-                opacity: 0.4,
-              }}
-            >
-              🔒
-            </div>
-            <div>
-              <h3
-                style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "#4B5563",
-                  marginBottom: 4,
-                }}
-              >
-                More cases coming soon
-              </h3>
-              <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>
-                Roe v. Wade, Brown v. Board of Education, and 200+ more in
-                progress.
-              </p>
-            </div>
-          </div>
-        )}
 
         <style>{`
           .case-card:hover {

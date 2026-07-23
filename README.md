@@ -329,7 +329,7 @@ lexai/
 - [x] Shareable session cards with dynamic OG image generation
 - [x] Professor dashboard with class management and student analytics
 - [x] Real-time multiplayer battle mode with Supabase Realtime
-- [x] Loading skeletons with shimmer animation on all data pages- [ ] 200 plus landmark cases
+- [x] Loading skeletons with shimmer animation on all data pages- [x] 10 landmark cases across Criminal, Civil, Constitutional, and IP law
 - [x] Error boundaries with friendly AI failure messages and retry logic
 - [x] Row Level Security on all Supabase tables
 - [x] API rate limiting — 50 requests per hour per user
